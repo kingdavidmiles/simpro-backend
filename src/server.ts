@@ -21,7 +21,8 @@ import {
 } from "./jobs/jobService.js";
 import { cancelAppointment } from "./appointments/cancel.js";
 import { rescheduleAppointment } from "./appointments/reschedule.js";
-import { bookAppointment } from "./appointments/book.js";
+import { bookAppointment, BookAppointmentParams } from "./appointments/book.js";
+import { simpro } from "./api.js";
 
 // ──────────────────────────────────────────────────────────────
 // App Setup
@@ -78,13 +79,48 @@ app.post("/employees/check-availability", async (req, res) => {
 
 // Appointment route
 app.post("/appointments/book", async (req, res) => {
-  const params = req.body;
-  if (!params.companyId || !params.customerName || !params.siteName || !params.technicianName || !params.date || !params.time || !params.jobName) {
-    return res.status(400).json({ error: "Missing required fields" });
+  const { Name, Customer, Site, Description, DueDate, DueTime } = req.body;
+
+  // Auto-fill Type as "Service"
+  const Type = "Service";
+
+  // Validate required fields
+  const missing: string[] = [];
+  if (!Name) missing.push("Name");
+  if (!Customer) missing.push("Customer");
+  if (!Site) missing.push("Site");
+  if (!DueDate) missing.push("DueDate");
+  if (!DueTime) missing.push("DueTime");
+
+  if (missing.length > 0) {
+    return res.status(400).json({ error: "Missing required fields", missing, received: req.body });
   }
 
-  const result = await bookAppointment(params);
-  res.json(result);
+  try {
+    const response = await simpro.post(`/companies/191/jobs/`, {
+      Type,        // always "Service"
+      Name,
+      Customer,
+      Site,
+      Description,
+      DueDate,
+      DueTime,
+    });
+
+    res.json({
+      success: true,
+      jobId: response.data.ID,
+      message: "Service Job created successfully",
+      job: response.data,
+    });
+  } catch (err: any) {
+    console.error("Failed to book appointment:", err.response?.data || err.message);
+    res.status(err.response?.status || 500).json({
+      success: false,
+      error: "Failed to book appointment",
+      details: err.response?.data || err.message,
+    });
+  }
 });
 
 
