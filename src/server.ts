@@ -79,16 +79,16 @@ app.post("/employees/check-availability", async (req, res) => {
 
 // Appointment route
 app.post("/appointments/book", async (req, res) => {
-  const { Name, Customer, Description, DueDate, DueTime } = req.body;
+  const { Name, Description, DueDate, DueTime } = req.body;
 
   // Auto-fill Type as "Service"
   const Type = "Service";
-  const Site = 41226; // 🔥 Hardcoded as requested
+  const Site = 41226; 
+  const Customer = 23110;
 
   // Validate required fields
   const missing: string[] = [];
   if (!Name) missing.push("Name");
-  if (!Customer) missing.push("Customer");
   if (!DueDate) missing.push("DueDate");
   if (!DueTime) missing.push("DueTime");
 
