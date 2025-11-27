@@ -79,26 +79,30 @@ app.post("/employees/check-availability", async (req, res) => {
 
 // Appointment route
 app.post("/appointments/book", async (req, res) => {
-  const { Name, Customer, Site, Description, DueDate, DueTime } = req.body;
+  const { Name, Customer, Description, DueDate, DueTime } = req.body;
 
   // Auto-fill Type as "Service"
   const Type = "Service";
+  const Site = 41226; // 🔥 Hardcoded as requested
 
   // Validate required fields
   const missing: string[] = [];
   if (!Name) missing.push("Name");
   if (!Customer) missing.push("Customer");
-  if (!Site) missing.push("Site");
   if (!DueDate) missing.push("DueDate");
   if (!DueTime) missing.push("DueTime");
 
   if (missing.length > 0) {
-    return res.status(400).json({ error: "Missing required fields", missing, received: req.body });
+    return res.status(400).json({
+      error: "Missing required fields",
+      missing,
+      received: req.body,
+    });
   }
 
   try {
     const response = await simpro.post(`/companies/191/jobs/`, {
-      Type,        // always "Service"
+      Type,
       Name,
       Customer,
       Site,
@@ -122,6 +126,8 @@ app.post("/appointments/book", async (req, res) => {
     });
   }
 });
+
+
 
 
 // Cancel a job
