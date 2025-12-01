@@ -1,18 +1,28 @@
-import { Request, Response } from "express";
-import { deleteJob } from "../jobs/jobService.js";
+// deleteJob.ts
+import { simpro } from "../api.js";
 
-export async function cancelAppointment(req: Request, res: Response) {
-  const { companyId, jobId } = req.body;
-
-  if (!companyId || !jobId) {
-    return res.status(400).json({ error: "Missing required fields: companyId or jobId" });
-  }
+export async function cancelAppointment(companyId: number, jobId: number) {
+  if (!jobId) throw new Error("Job ID is required");
 
   try {
-    const result = await deleteJob(companyId, jobId);
-    res.json({ success: true, result });
+    const res = await simpro.delete(
+      `/companies/${companyId}/jobs/${jobId}`
+    );
+
+    return {
+      success: true,
+      jobId,
+      message: "Job deleted successfully",
+      result: res.data,
+    };
+
   } catch (err: any) {
-    console.error("Failed to cancel job:", err.response?.data || err);
-    res.status(500).json({ error: "Failed to cancel job", details: err.response?.data || err });
+    console.error("Failed to delete job:", err.response?.data || err.message);
+    return {
+      success: false,
+      error: "Failed to delete job",
+      details: err.response?.data || err.message,
+      status: err.response?.status,
+    };
   }
 }

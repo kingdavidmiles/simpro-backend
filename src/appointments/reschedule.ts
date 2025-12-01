@@ -1,23 +1,45 @@
-import { Request, Response } from "express";
-import { patchJob } from "../jobs/jobService.js";
+// updateJob.ts
+import { simpro } from "../api.js";
 
-export async function rescheduleAppointment(req: Request, res: Response) {
-  const { companyId, jobId, newDueDate, newDueTime } = req.body;
+export interface UpdateJobParams {
+  companyId: number;
+  jobId: number;
+  Name?: string;
+  Description?: string;
+  DueDate?: string; // YYYY-MM-DD
+  DueTime?: string; // HH:MM
+  Stage?: string;
+}
 
-  if (!companyId || !jobId || !newDueDate || !newDueTime) {
-    return res.status(400).json({ error: "Missing required fields" });
+export async function rescheduleAppointment(params: UpdateJobParams) {
+  const { companyId, jobId, ...updates } = params;
+
+  if (Object.keys(updates).length === 0) {
+    throw new Error("No update fields provided.");
   }
 
-  const patchData = {
-    DueDate: newDueDate,
-    DueTime: newDueTime
-  };
-
   try {
-    const result = await patchJob(companyId, jobId, patchData);
-    res.json({ success: true, result });
+    console.log("Updating job:", jobId, updates);
+
+    const res = await simpro.patch(
+      `/companies/${companyId}/jobs/${jobId}`, 
+      updates
+    );
+
+    return {
+      success: true,
+      jobId,
+      updated: res.data,
+      message: "Job updated successfully",
+    };
+
   } catch (err: any) {
-    console.error("Failed to reschedule job:", err.response?.data || err);
-    res.status(500).json({ error: "Failed to reschedule job", details: err.response?.data || err });
+    console.error("Failed to update job:", err.response?.data || err.message);
+    return {
+      success: false,
+      error: "Failed to update job",
+      details: err.response?.data || err.message,
+      status: err.response?.status,
+    };
   }
 }

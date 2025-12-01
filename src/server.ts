@@ -131,11 +131,34 @@ app.post("/appointments/book", async (req, res) => {
 
 
 // Cancel a job
-app.post("/appointments/cancel", cancelAppointment);
+app.delete("/appointments/:jobId", async (req, res) => {
+  const { jobId } = req.params;
+
+  try {
+    const result = await deleteJob(191, parseInt(jobId));
+    res.status(result.success ? 200 : 400).json(result);
+  } catch (e: any) {
+    res.status(500).json({ success: false, error: e.message });
+  }
+});
+
 
 // Reschedule a job
-app.post("/appointments/reschedule", rescheduleAppointment);
+app.patch("/appointments/:jobId", async (req, res) => {
+  const { jobId } = req.params;
 
+  try {
+    const result = await rescheduleAppointment({
+      companyId: 191,
+      jobId: parseInt(jobId),
+      ...req.body,
+    });
+
+    res.status(result.success ? 200 : 400).json(result);
+  } catch (e: any) {
+    res.status(500).json({ success: false, error: e.message });
+  }
+});
 // ──────────────────────────────────────────────────────────────
 // Start Server
 // ──────────────────────────────────────────────────────────────
